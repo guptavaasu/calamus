@@ -16,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Marshmallow fields for use with Json-LD."""
+from functools import total_ordering
 
 import marshmallow.fields as fields
 from marshmallow.base import SchemaABC
@@ -33,6 +34,7 @@ from calamus.utils import normalize_type, normalize_value
 logger = logging.getLogger("calamus")
 
 
+@total_ordering
 class IRI(object):
     """ Represent an IRI in a namespace."""
 
@@ -56,6 +58,10 @@ class IRI(object):
             other = str(other)
 
         return expanded == other
+
+    def __lt__(self, other):
+        """Compare this with another IRI."""
+        return str(self) < str(other)
 
 
 class BlankNodeId(object):
