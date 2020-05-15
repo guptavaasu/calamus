@@ -92,7 +92,7 @@ class Namespace(object):
 class _JsonLDField(fields.Field):
     """Internal class that enables marshmallow fields to be serialized with a JsonLD field name."""
 
-    def __init__(self, field_name, *args, **kwargs):
+    def __init__(self, field_name=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.field_name = field_name
 
@@ -101,6 +101,8 @@ class _JsonLDField(fields.Field):
     @property
     def data_key(self):
         """Return the (expanded) JsonLD field name."""
+        if self.field_name is None:
+            raise ValueError("field_name was not set for {}".format(self))
         return str(self.field_name)
 
     @data_key.setter
@@ -108,24 +110,16 @@ class _JsonLDField(fields.Field):
         pass
 
     def _deserialize(self, value, attr, data, **kwargs):
-        value = normalize_value(value)
+        if not isinstance(self, fields.List):
+            value = normalize_value(value)
         return super()._deserialize(value, attr, data, **kwargs)
 
 
-class Id(fields.String):
+class Id(_JsonLDField, fields.String):
     """A node identifier."""
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    @property
-    def data_key(self):
-        """Return the (expanded) JsonLD field name."""
-        return "@id"
-
-    @data_key.setter
-    def data_key(self, value):
-        pass
+        super().__init__(field_name="@id", *args, **kwargs)
 
 
 class String(_JsonLDField, fields.String):
@@ -373,3 +367,8 @@ class List(_JsonLDField, fields.List):
 
     def _deserialize(self, value, attr, data, **kwargs) -> typing.List[typing.Any]:
         return super()._deserialize(value["@list"], attr, data, **kwargs)
+
+    @property
+    def opts(self):
+        """Return parent's opts."""
+        return self.parent.opts
