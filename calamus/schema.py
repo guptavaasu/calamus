@@ -52,6 +52,7 @@ class JsonLDSchemaOpts(SchemaOpts):
 
         self.model = getattr(meta, "model", None)
         self.add_value_types = getattr(meta, "add_value_types", False)
+        self.translate = getattr(meta, "translate", None)
 
 
 class JsonLDSchema(Schema):
@@ -214,6 +215,12 @@ class JsonLDSchema(Schema):
             if data.get("@context", None):
                 # we got compacted jsonld, expand it
                 data = jsonld.expand(data)
+                if isinstance(data, list):
+                    data = data[0]
+                # do vocabulary translation
+                if self.opts.translate is not None:
+                    data = jsonld.compact(data, self.opts.translate)
+                    data.pop('@context', None)
 
             partial_is_collection = is_collection(partial)
             for attr_name, field_obj in self.load_fields.items():
