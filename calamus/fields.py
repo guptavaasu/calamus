@@ -97,6 +97,7 @@ class _JsonLDField(fields.Field):
         self.field_name = field_name
 
         self.reverse = kwargs.get("reverse", False)
+        self.init_name = kwargs.get("init_name", None)
 
     @property
     def data_key(self):

@@ -101,6 +101,7 @@ class JsonLDSchema(Schema):
 
         self.flattened = flattened
         self._all_objects = _all_objects
+        self._init_names_mapping = {}
 
         if not self.opts.rdf_type or not self.opts.model:
             raise ValueError("rdf_type and model have to be set on the Meta of schema {}".format(type(self)))
@@ -281,11 +282,19 @@ class JsonLDSchema(Schema):
                             [self.error_messages["unknown"]], key, (index if index_errors else None),
                         )
 
+        self._init_names_mapping = {
+            field_name: field_obj.init_name
+            for field_name, field_obj in self.load_fields.items() if field_obj.init_name
+        }
+
         return ret
 
     @post_load
     def make_instance(self, data, **kwargs):
         """Transform loaded dict into corresponding object."""
+
+        for old_key, new_key in self._init_names_mapping.items():
+            data[new_key] = data.pop(old_key)
 
         const_args = inspect.signature(self.opts.model)
         keys = set(data.keys())
