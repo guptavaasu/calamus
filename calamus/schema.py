@@ -221,7 +221,7 @@ class JsonLDSchema(Schema):
                 # do vocabulary translation
                 if self.opts.translate is not None:
                     data = jsonld.compact(data, self.opts.translate)
-                    data.pop('@context', None)
+                    data.pop("@context", None)
 
             partial_is_collection = is_collection(partial)
             for attr_name, field_obj in self.load_fields.items():
@@ -283,8 +283,7 @@ class JsonLDSchema(Schema):
                         )
 
         self._init_names_mapping = {
-            field_name: field_obj.init_name
-            for field_name, field_obj in self.load_fields.items() if field_obj.init_name
+            field_name: field_obj.init_name for field_name, field_obj in self.load_fields.items() if field_obj.init_name
         }
 
         return ret
