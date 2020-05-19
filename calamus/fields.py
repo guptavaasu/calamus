@@ -361,13 +361,16 @@ class List(_JsonLDField, fields.List):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.ordered = kwargs.get("ordered", False)
 
     def _serialize(self, value, attr, obj, **kwargs):
         value = super()._serialize(value, attr, obj, **kwargs)
-        return {"@list": value}
+        return {"@list": value} if self.ordered else value
 
     def _deserialize(self, value, attr, data, **kwargs) -> typing.List[typing.Any]:
-        return super()._deserialize(value["@list"], attr, data, **kwargs)
+        if isinstance(value, dict):  # an ordered list
+            value = value["@list"]
+        return super()._deserialize(value, attr, data, **kwargs)
 
     @property
     def opts(self):
