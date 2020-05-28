@@ -17,7 +17,7 @@
 # limitations under the License.
 """Marshmallow schema implementation that supports Json-LD."""
 
-from marshmallow.schema import Schema, SchemaOpts
+from marshmallow.schema import Schema, SchemaMeta, SchemaOpts
 from marshmallow.utils import missing, is_collection, RAISE, set_value, EXCLUDE, INCLUDE
 from marshmallow import post_load
 from collections.abc import Mapping
@@ -55,7 +55,24 @@ class JsonLDSchemaOpts(SchemaOpts):
         self.translate = getattr(meta, "translate", None)
 
 
-class JsonLDSchema(Schema):
+class JsonLDSchemaMeta(SchemaMeta):
+    """Metaclass for a for a JsonLDSchema class."""
+
+    def __new__(mcs, name, bases, attrs):
+        klass = super().__new__(mcs, name, bases, attrs)
+
+        # Include rdf_type of all parent schemas
+        for base in bases:
+            if hasattr(base, "Meta"):
+                rdf_type = getattr(base.Meta, "rdf_type", [])
+                klass.opts.rdf_type.extend(rdf_type)
+
+        klass.opts.rdf_type = sorted(set(klass.opts.rdf_type))
+
+        return klass
+
+
+class JsonLDSchema(Schema, metaclass=JsonLDSchemaMeta):
     """Schema for a JsonLD class.
     Example: ::
         from calamus import JsonLDSchema
@@ -293,7 +310,7 @@ class JsonLDSchema(Schema):
         """Transform loaded dict into corresponding object."""
 
         for old_key, new_key in self._init_names_mapping.items():
-            data[new_key] = data.pop(old_key)
+            data[new_key] = data.pop(old_key, None)
 
         const_args = inspect.signature(self.opts.model)
         keys = set(data.keys())

@@ -63,6 +63,9 @@ class IRI(object):
         """Compare this with another IRI."""
         return str(self) < str(other)
 
+    def __hash__(self):
+        return str(self).__hash__()
+
 
 class BlankNodeId(object):
     """ Represent an IRI in a namespace."""
